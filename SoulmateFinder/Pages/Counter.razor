@@ -1,0 +1,56 @@
+﻿@page "/"
+@using SoulmateFinder.Components
+
+<QuestionCard AnswerChanged="(bool answer) => QuestionAnswered(answer)"
+              Question=@currentQuestion.Prompt OptionA=@currentQuestion.OptionA OptionB=@currentQuestion.OptionB />
+
+<div>@currentQuestion.Answer.ToString()</div>
+<div>
+    <img src="@imageSource" />
+</div>
+<div>@message</div>
+
+@code {
+    private string message;
+    private string imageSource;
+    private int index = 0;
+    private List<Question> questions;
+    private Question currentQuestion;
+    public Counter()
+    {
+        questions = new List<Question>()
+    {
+            new Question("What is your name?", "Me", "You"),
+            new Question("What do you do?", "Something", "Nothing")
+        };
+        currentQuestion = questions.FirstOrDefault();
+    }
+
+    protected void QuestionAnswered(bool answer)
+    {
+        currentQuestion.Answer = answer;
+        index++;
+        if (index < questions.Count())
+            currentQuestion = questions.Skip(index).Take(1).SingleOrDefault();
+        else
+        {
+            imageSource = "images/hipster.jpeg";
+            message = "The hipster";
+        }
+    }
+
+    public class Question
+    {
+        public string Prompt { get; set; }
+        public string OptionA { get; set; }
+        public string OptionB { get; set; }
+        public bool Answer { get; set; }
+
+        public Question(string prompt, string optionA, string optionB)
+        {
+            Prompt = prompt;
+            OptionA = optionA;
+            OptionB = optionB;
+        }
+    }
+}

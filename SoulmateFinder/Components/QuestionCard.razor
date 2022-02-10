@@ -1,0 +1,24 @@
+﻿<div class="card">
+    <div class="card-header">@Question</div>
+    <div class="card-body">
+        <button @onclick="() => OnChoice(true)">@OptionA</button>
+        <button @onclick="() => OnChoice(false)">@OptionB</button>
+    </div>
+</div>
+@code {
+    [Parameter]
+    public string Question { get; set; }
+    [Parameter]
+    public string OptionA { get; set; }
+    [Parameter]
+    public string OptionB { get; set; }
+    [Parameter]
+    public bool Answer { get; set; }
+    [Parameter]
+    public EventCallback<bool> AnswerChanged { get; set; }
+
+    private Task OnChoice(bool choice)
+    {
+        return AnswerChanged.InvokeAsync(choice);
+    }
+}
