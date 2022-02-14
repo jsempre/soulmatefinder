@@ -1,42 +1,87 @@
 ﻿@page "/"
 @using SoulmateFinder.Components
 
-<QuestionCard AnswerChanged="(bool answer) => QuestionAnswered(answer)"
-              Question=@currentQuestion.Prompt OptionA=@currentQuestion.OptionA OptionB=@currentQuestion.OptionB />
+@if (isDone)
+{
+    <div style="text-align: center">
+        <div class="imgbox">
+            <img class="center-fit" src="@imageSource" />
+        </div>
+        <div style="font-size:large; font-weight:bold">Bowser</div>
+        <div>@message</div>
+        <button @onclick="() => Reset()">Restart</button>
+    </div>
+}
+else
+{
+    <QuestionCard AnswerChanged="(bool answer) => QuestionAnswered(answer)"
+        Question=@currentQuestion.Prompt OptionA=@currentQuestion.OptionA OptionB=@currentQuestion.OptionB />
+}
 
-<div>@currentQuestion.Answer.ToString()</div>
-<div>
-    <img src="@imageSource" />
-</div>
-<div>@message</div>
 
 @code {
     private string message;
     private string imageSource;
-    private int index = 0;
-    private List<Question> questions;
+    private Question rootQuestion;
     private Question currentQuestion;
+    private bool isDone = false;
     public Counter()
     {
-        questions = new List<Question>()
-    {
-            new Question("What is your name?", "Me", "You"),
-            new Question("What do you do?", "Something", "Nothing")
-        };
-        currentQuestion = questions.FirstOrDefault();
+        rootQuestion = new Question("Do you like the outdoors?", "Get me outside!", "I'd rather stay inside, thanks",
+            new Question("Do you like traveling?", "Yep, let's go", "Eh, why leave something good?",
+                new Question("Do you like big cities?", "Gotta be in the center of it all", "Get me out of the crowds",
+                    new Question("Do you wish everything was dog friendly?", "Obviously", "I can make due without",
+                        new Question("images/Bowser_Berlin.jpeg", "A world traveler who always likes to be included. He'll be your partner through the hustle and bustle of life."),
+                        new Question("images/Bowser_By_Brooklyn_Bridge.jpeg", "An experienced traveler who wants to share these moments with you. No place is too big to explore.")),
+                    new Question("Do you enjoy the beach?", "Put down a towel", "Too much sun and sand",
+                        new Question("images/Bowser_Hamptons.jpeg", "A beach bunny who wants to slow down and relax with you. Loves finding new spots to make his own."),
+                        new Question("images/Bowser_Central_Park_Sweater.jpeg", "A classy guy, always seeking new places, but never wants to be apart from you. Loves to take a step back and reflect."))),
+                new Question("Do you like to stay active?", "Never stop moving", "Slow it down a little",
+                    new Question("Do you mind some cold and snow?", "That's not funny", "Bring it on",
+                        new Question("Do you like long walks?", "The longer the better", "That's a pass for me, thanks",
+                            new Question("images/Bowser_PCT.jpg", "A fit outdoors enthusiast, loves being in nature and wants you to come with. Come wander the mountains."),
+                            new Question("images/Bowser_kayaking.jpg", "Never slowing down, let this captain show you around the water. He's happy floating around as long as you're there.")),
+                        new Question("images/Bowser_Dashing_Snow.jpg", "Endless energy bounding through the snow. He'll be your companion any time of year.")),
+                    new Question("Are you into sports?", "Who isn't?", "I'm not",
+                        new Question("images/Bowser_Baseball.jpg", "Relax with this sports fan. He loves doing anything together, but he'll always cheer for you."),
+                        new Question("images/Bowser_Commonwealth.jpg", "Unwind and grab a meal with this culinary connoisseur. He might not be allowed inside, but he's always willing to go out with you.")))),
+            new Question("Are you a cuddler?", "These arms were made for holding", "I need a little space",
+                new Question("Are you a fairly serious person?", "I don't mess around", "I can be a little silly",
+                    new Question("Do you like children?", "Bundles of joy", "That sounds exhausting",
+                        new Question("images/Bowser_Scout.jpg", "A snuggle bug who loves kids. He'll take good care of them, and you!"),
+                        new Question("images/Bowser_Inviting.jpg", "A snuggler at heart. Give him a warm blanket and he'll never leave your side.")),
+                    new Question("Do you like children?", "Bundles of joy", "That sounds exhausting",
+                        new Question("images/Bowser_Goofy_Scout.jpg", "A bit of a goofball, a bit of a snuggler. Will always look after you and your family."),
+                        new Question("images/Bowser_Yawning.jpg", "Get a blanket, some peace and quiet and this boy won't leave your side."))),
+                new Question("Do you like going out?", "Hit the town", "Quiet night at home",
+                    new Question("Do you like traveling?", "Yep, let's go", "Eh, why leave something good?",
+                        new Question("images/Bowser_Grit_Glory.jpeg", "For the outgoing lifestyle, he'll be your companion on every adventure."),
+                        new Question("images/Bowser_Aroma.jpeg", "Handsome, classy, good taste, what more could you want? Enjoy the simple pleasures on the town with a loyal partner.")),
+                    new Question("Do you prefer TV or books?", "Gotta catch my stories", "I'm a sophisticated reader",
+                        new Question("images/Bowser_TV.jpg", "Curl up in front of a good show and always be in each others company."),
+                        new Question("images/Bowser_Reading.jpg", "Want a quiet reading buddy? Or to be read to? He'll always be there for you."))))
+            );
+
+        currentQuestion = rootQuestion;
     }
 
     protected void QuestionAnswered(bool answer)
     {
-        currentQuestion.Answer = answer;
-        index++;
-        if (index < questions.Count())
-            currentQuestion = questions.Skip(index).Take(1).SingleOrDefault();
-        else
+        var next = answer ? currentQuestion.NextQuestionA : currentQuestion.NextQuestionB;
+        if (!string.IsNullOrWhiteSpace(next.AnswerImage))
         {
-            imageSource = "images/hipster.jpeg";
-            message = "The hipster";
+            imageSource = next.AnswerImage;
+            message = next.AnswerText;
+            isDone = true;
         }
+        else
+            currentQuestion = next;
+    }
+
+    private void Reset()
+    {
+        currentQuestion = rootQuestion;
+        isDone = false;
     }
 
     public class Question
@@ -44,13 +89,24 @@
         public string Prompt { get; set; }
         public string OptionA { get; set; }
         public string OptionB { get; set; }
-        public bool Answer { get; set; }
+        public Question NextQuestionA { get; set; }
+        public Question NextQuestionB { get; set; }
+        public string AnswerImage { get; set; }
+        public string AnswerText { get; set; }
 
-        public Question(string prompt, string optionA, string optionB)
+
+        public Question(string prompt, string optionA, string optionB, Question nextA, Question nextB)
         {
             Prompt = prompt;
             OptionA = optionA;
             OptionB = optionB;
+            NextQuestionA = nextA;
+            NextQuestionB = nextB;
+        }
+        public Question(string answerImage, string answerText)
+        {
+            AnswerImage = answerImage;
+            AnswerText = answerText;
         }
     }
 }
